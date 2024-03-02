@@ -1,3 +1,5 @@
+# https://www.youtube.com/watch?v=O8596GPSJV4
+
 from cryptography.fernet import Fernet  # this is for symmetric key
 
 class PasswordManager:
