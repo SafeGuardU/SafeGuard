@@ -36,5 +36,5 @@ def generate_password(min_length, numbers=True, special_characters=True):
 
         
 
-pwd = generate_password(20)
+pwd = generate_password(15)
 print(pwd)
