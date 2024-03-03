@@ -1,5 +1,6 @@
 /* if we do end up programming some things in JS it can be convenient to 
-use an online complier instead of mucking around to get it working in your own environment every time */ 
+use an online complier (https://www.programiz.com/javascript/online-compiler/) instead of mucking around to get it working in 
+your own environment every time */ 
 
 function generateRandomPassword(length) {
     var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
