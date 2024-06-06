@@ -1,9 +1,12 @@
 import random
 import string
 
+length = int(input("Number of characters?: "))
 
-def generate_password(length=15):
-    
+def generate_password(length):
+    if length < 4:
+        raise ValueError("Password length should be at least 4 characters.")
+
     # Define character sets for password generation
     lowercase_letters = string.ascii_lowercase
     uppercase_letters = string.ascii_uppercase
@@ -14,7 +17,12 @@ def generate_password(length=15):
     all_characters = lowercase_letters + uppercase_letters + digits + symbols
     
     # Generate a password with at least one character from each character set
-    password = random.choice(lowercase_letters) + random.choice(uppercase_letters) + random.choice(digits) + random.choice(symbols)
+    password = (
+        random.choice(lowercase_letters) +
+        random.choice(uppercase_letters) +
+        random.choice(digits) +
+        random.choice(symbols)
+    )
     
     # Fill the rest of the password with random characters from all_characters
     password += ''.join(random.choice(all_characters) for _ in range(length - 4))
@@ -26,7 +34,6 @@ def generate_password(length=15):
     
     return password
 
-
 # Example usage
-password = generate_password()
+password = generate_password(length)
 print("Generated Password:", password)
