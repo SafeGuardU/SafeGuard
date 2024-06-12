@@ -12,7 +12,7 @@ class MainWindow(qtw.QWidget):
     
         # set vertical layout
         self.setLayout(qtw.QVBoxLayout())
-
+ 
         # create a label
         my_label = qtw.QLabel("Number of Characters")
         # change font size of label
