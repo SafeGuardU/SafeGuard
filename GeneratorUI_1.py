@@ -9,6 +9,9 @@ class MainWindow(qtw.QWidget):
         super().__init__()
         # set title
         self.setWindowTitle("PASSWORD GENERATOR")
+        
+        # set fixed size
+        self.setFixedSize(400, 625)
     
         # set vertical layout
         self.setLayout(qtw.QVBoxLayout())
