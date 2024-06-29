@@ -56,6 +56,23 @@ def encrypt_plaintext_password(plaintext_password, encryption_key):
     encrypted_password = aesgcm.encrypt(nonce, plaintext_password.encode(), None)
     return base64.b64encode(nonce + encrypted_password).decode()
 
+# Function to create a user if it doesn't exist
+def create_user(username):
+    # Check if user already exists
+    cursor.execute('SELECT UserID FROM Users WHERE Username = ?', (username,))
+    user = cursor.fetchone()
+    if user:
+        return user[0]
+    else:
+        master_password_hash = base64.b64encode(b"dummy_hash").decode()
+        master_password_salt = base64.b64encode(b"dummy_salt").decode()
+        cursor.execute('''
+        INSERT INTO Users (Username, MasterPasswordHash, MasterPasswordSalt)
+        VALUES (?, ?, ?)
+        ''', (username, master_password_hash, master_password_salt))
+        conn.commit()
+        return cursor.lastrowid
+
 # Function to store the encrypted password and salt into the database
 def store_encrypted_password(user_id, website_name, stored_username, encrypted_password, salt):
     cursor.execute('''
@@ -68,10 +85,13 @@ def store_encrypted_password(user_id, website_name, stored_username, encrypted_p
 # Main function to handle user input and process encryption
 def main():
     # Collect user input
-    user_id = input("Enter your User ID: ")
+    username = input("Enter your Username: ")
     website_name = input("Enter the Website Name: ")
     stored_username = input("Enter the Username for the stored account: ")
     plaintext_password = input("Enter the Password to store: ")
+
+    # Create user if not exists and get user_id
+    user_id = create_user(username)
 
     # Generate salt for encryption
     salt = generate_salt()
@@ -84,6 +104,17 @@ def main():
 
     # Store the encrypted password and salt in the database
     store_encrypted_password(user_id, website_name, stored_username, encrypted_password, salt)
+
+    # Debug output to check stored data
+    cursor.execute('SELECT * FROM Passwords')
+    rows = cursor.fetchall()
+    for row in rows:
+        print(f"Debug: Stored row in Passwords - {row}")
+
+    cursor.execute('SELECT * FROM Users')
+    rows = cursor.fetchall()
+    for row in rows:
+        print(f"Debug: Stored row in Users - {row}")
 
 if __name__ == "__main__":
     main()

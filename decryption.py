@@ -36,8 +36,8 @@ def retrieve_password(username, website_name, stored_username):
     SELECT p.EncryptedPassword, p.Salt
     FROM Passwords p
     JOIN Users u ON p.UserID = u.UserID
-    WHERE u.Username = ? AND p.WebsiteName = ? AND p.StoredUsername = ?
-    ''', (username, website_name, stored_username))
+    WHERE LOWER(u.Username) = ? AND LOWER(p.WebsiteName) = ? AND LOWER(p.StoredUsername) = ?
+    ''', (username.lower(), website_name.lower(), stored_username.lower()))
     
     row = cursor.fetchone()
     
@@ -57,6 +57,8 @@ def main():
     website_name = input("Enter the Website Name: ")
     stored_username = input("Enter the Username for the stored account: ")
     
+    print(f"Debug: Inputs - Username: {username}, Website: {website_name}, StoredUsername: {stored_username}")
+    
     # Retrieve and decrypt the password
     decrypted_password = retrieve_password(username, website_name, stored_username)
     
@@ -64,6 +66,18 @@ def main():
         print(f"The password for {stored_username} on {website_name} is: {decrypted_password}")
     else:
         print("No matching credentials found.")
+
+    # Debug output to check stored data in Passwords table
+    cursor.execute('SELECT * FROM Passwords')
+    rows = cursor.fetchall()
+    for row in rows:
+        print(f"Debug: Stored row in Passwords - {row}")
+
+    # Debug output to check stored data in Users table
+    cursor.execute('SELECT * FROM Users')
+    rows = cursor.fetchall()
+    for row in rows:
+        print(f"Debug: Stored row in Users - {row}")
 
 if __name__ == "__main__":
     main()
