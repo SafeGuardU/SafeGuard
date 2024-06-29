@@ -38,8 +38,8 @@ conn.commit()
 def generate_salt():
     return os.urandom(16)
 
-# Function to create a random encryption key
-def generate_random_key(salt):
+# Function to hash a password with a given salt
+def hash_password(password, salt):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -47,7 +47,18 @@ def generate_random_key(salt):
         iterations=100000,
         backend=default_backend()
     )
-    return kdf.derive(b"fixed_random_string")
+    return kdf.derive(password.encode())
+
+# Function to create an encryption key based on a master password hash and a salt
+def generate_encryption_key(master_password_hash, salt):
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    return kdf.derive(master_password_hash)
 
 # Function to encrypt the plaintext password using AES-256
 def encrypt_plaintext_password(plaintext_password, encryption_key):
@@ -64,12 +75,13 @@ def create_user(username):
     if user:
         return user[0]
     else:
-        master_password_hash = base64.b64encode(b"dummy_hash").decode()
-        master_password_salt = base64.b64encode(b"dummy_salt").decode()
+        master_password = "dummy_password"
+        fixed_salt = b"fixed_salt"
+        master_password_hash = hash_password(master_password, fixed_salt)
         cursor.execute('''
         INSERT INTO Users (Username, MasterPasswordHash, MasterPasswordSalt)
         VALUES (?, ?, ?)
-        ''', (username, master_password_hash, master_password_salt))
+        ''', (username, base64.b64encode(master_password_hash).decode(), base64.b64encode(fixed_salt).decode()))
         conn.commit()
         return cursor.lastrowid
 
@@ -86,6 +98,7 @@ def store_encrypted_password(user_id, website_name, stored_username, encrypted_p
 def main():
     # Collect user input
     username = input("Enter your Username: ")
+    master_password = input("Enter your Master Password: ")
     website_name = input("Enter the Website Name: ")
     stored_username = input("Enter the Username for the stored account: ")
     plaintext_password = input("Enter the Password to store: ")
@@ -93,11 +106,29 @@ def main():
     # Create user if not exists and get user_id
     user_id = create_user(username)
 
+    # Retrieve the stored master password hash and salt
+    cursor.execute('SELECT MasterPasswordHash, MasterPasswordSalt FROM Users WHERE UserID = ?', (user_id,))
+    stored_hash, stored_salt = cursor.fetchone()
+    stored_hash = base64.b64decode(stored_hash)
+    stored_salt = base64.b64decode(stored_salt)
+
+    # Verify the entered master password
+    entered_hash = hash_password(master_password, stored_salt)
+    
+    # Debug information
+    print(f"Debug: Stored hash: {stored_hash}")
+    print(f"Debug: Entered hash: {entered_hash}")
+    print(f"Debug: Stored salt: {stored_salt}")
+
+    if entered_hash != stored_hash:
+        print("Master password verification failed.")
+        return
+
     # Generate salt for encryption
     salt = generate_salt()
 
-    # Generate encryption key using the generated salt
-    encryption_key = generate_random_key(salt)
+    # Generate encryption key using the master password hash and the newly generated salt
+    encryption_key = generate_encryption_key(stored_hash, salt)
 
     # Encrypt the plaintext password
     encrypted_password = encrypt_plaintext_password(plaintext_password, encryption_key)
