@@ -50,12 +50,10 @@ class MainWindow(qtw.QWidget):
         # create checkboxes
         self.include_numbers = qtw.QCheckBox("Include Numbers")
         self.include_numbers.setChecked(True)
-        self.include_numbers.setStyleSheet("QCheckBox { color: green }")
         self.layout().addWidget(self.include_numbers)
 
         self.include_special_chars = qtw.QCheckBox("Include Special Characters")
         self.include_special_chars.setChecked(True)
-        self.include_special_chars.setStyleSheet("QCheckBox { color: green }")
         self.layout().addWidget(self.include_special_chars)
 
         # create a button
