@@ -8,54 +8,65 @@ class MainWindow(qtw.QWidget):
     def __init__(self):
         super().__init__()
         # set title
-        self.setWindowTitle("PASSWORD GENERATOR")
+        self.setWindowTitle("PASSWORD MANAGER")
         
         # set fixed size
         self.setFixedSize(400, 625)
     
         # set vertical layout
         self.setLayout(qtw.QVBoxLayout())
- 
-        # create a label
-        my_label = qtw.QLabel("Number of Characters")
-        # change font size of label
-        my_label.setFont(qtg.QFont('Helvetica', 20))
-        self.layout().addWidget(my_label) 
 
         # create a slider
         self.my_slider = qtw.QSlider(qtc.Qt.Orientation.Horizontal)
         self.my_slider.setMinimum(8)
         self.my_slider.setMaximum(100)
         self.my_slider.setValue(12)
-        self.my_slider.setTickInterval(1)
-        self.my_slider.setTickPosition(qtw.QSlider.TickPosition.TicksBelow)
+        self.my_slider.setTickInterval(10)
+        self.my_slider.setTickPosition(qtw.QSlider.TickPosition.NoTicks)
         self.my_slider.valueChanged.connect(self.update_slider_label)
 
         # put slider on screen
-        self.layout().addWidget(self.my_slider) 
+        self.layout().addWidget(self.my_slider)
 
-        # create a label to show the current slider value
-        self.slider_label = qtw.QLabel("12")
-        self.slider_label.setFont(qtg.QFont('Helvetica', 18))
-        self.layout().addWidget(self.slider_label)
+        # create a horizontal layout for the label and input field
+        label_input_layout = qtw.QHBoxLayout()
+
+        # create a label
+        my_label = qtw.QLabel("Number of Characters:")
+        my_label.setFont(qtg.QFont('Helvetica', 13))
+        label_input_layout.addWidget(my_label)
+
+        # create an input text field for the slider value
+        self.slider_input = qtw.QLineEdit("12")
+        self.slider_input.setValidator(qtg.QIntValidator(8, 100))
+        self.slider_input.setFixedWidth(50)  # set the fixed width for the input field
+        self.slider_input.setFont(qtg.QFont('Helvetica', 18))
+        self.slider_input.textChanged.connect(self.update_slider_from_input)
+        label_input_layout.addWidget(self.slider_input)
+
+        # add the horizontal layout to the main layout
+        self.layout().addLayout(label_input_layout)
 
         # create checkboxes
         self.include_numbers = qtw.QCheckBox("Include Numbers")
         self.include_numbers.setChecked(True)
+        self.include_numbers.setStyleSheet("QCheckBox { color: green }")
         self.layout().addWidget(self.include_numbers)
 
         self.include_special_chars = qtw.QCheckBox("Include Special Characters")
         self.include_special_chars.setChecked(True)
+        self.include_special_chars.setStyleSheet("QCheckBox { color: green }")
         self.layout().addWidget(self.include_special_chars)
 
         # create a button
-        my_button = qtw.QPushButton("Generate", clicked=self.press_it) 
-        self.layout().addWidget(my_button) 
+        my_button = qtw.QPushButton("Generate", clicked=self.press_it)
+        self.layout().addWidget(my_button)
 
-        # create a label to display the generated password
-        self.my_label2 = qtw.QLabel("")
-        self.my_label2.setFont(qtg.QFont('Helvetica', 20))
-        self.layout().addWidget(self.my_label2) 
+        # create a QTextEdit to display the generated password
+        self.password_display = qtw.QTextEdit()
+        self.password_display.setReadOnly(True)
+        self.password_display.setFont(qtg.QFont('Helvetica', 20))
+        self.layout().addWidget(self.password_display)
 
         # create a clipboard icon button
         clipboard_icon = qtg.QIcon.fromTheme("edit-copy")
@@ -109,14 +120,20 @@ class MainWindow(qtw.QWidget):
         include_special_chars = self.include_special_chars.isChecked()
         include_numbers = self.include_numbers.isChecked()
         password = self.generate_password(length, include_special_chars, include_numbers)
-        self.my_label2.setText(f'{password}')
+        self.password_display.setText(password)
 
     def update_slider_label(self):
-        self.slider_label.setText(str(self.my_slider.value()))
+        value = self.my_slider.value()
+        self.slider_input.setText(str(value))
+
+    def update_slider_from_input(self):
+        value = self.slider_input.text()
+        if value.isdigit():
+            self.my_slider.setValue(int(value))
 
     def copy_to_clipboard(self):
         clipboard = qtw.QApplication.clipboard()
-        clipboard.setText(self.my_label2.text().replace('Generated Password: ', ''))
+        clipboard.setText(self.password_display.toPlainText())
 
 app = qtw.QApplication([])
 mw = MainWindow()
