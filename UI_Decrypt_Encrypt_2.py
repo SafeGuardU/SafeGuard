@@ -3,6 +3,7 @@ import string
 import base64
 import sqlite3
 import os
+import sys
 import PyQt6.QtWidgets as qtw
 import PyQt6.QtGui as qtg
 import PyQt6.QtCore as qtc
@@ -74,8 +75,9 @@ class MainWindow(qtw.QWidget):
         self.login_dialog = LoginDialog(self)
         if self.login_dialog.exec() == qtw.QDialog.DialogCode.Accepted:
             self.load_accounts()
-
-        self.show()
+            self.show()
+        else:
+            sys.exit()
 
     def create_tables(self):
         self.cursor.execute('''
