@@ -16,6 +16,32 @@ class MainWindow(qtw.QWidget):
         # set vertical layout
         self.setLayout(qtw.QVBoxLayout())
 
+        # create a tab widget
+        self.tab_widget = qtw.QTabWidget()
+        self.layout().addWidget(self.tab_widget)
+
+        # create tabs
+        self.accounts_tab = qtw.QWidget()
+        self.generator_tab = qtw.QWidget()
+        self.settings_tab = qtw.QWidget()
+
+        # add tabs to tab widget
+        self.tab_widget.addTab(self.accounts_tab, "Accounts")
+        self.tab_widget.addTab(self.generator_tab, "Generator")
+        self.tab_widget.addTab(self.settings_tab, "Settings")
+
+        # set layouts for tabs
+        self.accounts_tab.setLayout(qtw.QVBoxLayout())
+        self.generator_tab.setLayout(qtw.QVBoxLayout())
+        self.settings_tab.setLayout(qtw.QVBoxLayout())
+
+        # add generator functionality to generator tab
+        self.setup_generator_tab()
+
+        # show the app
+        self.show()
+
+    def setup_generator_tab(self):
         # create a slider
         self.my_slider = qtw.QSlider(qtc.Qt.Orientation.Horizontal)
         self.my_slider.setMinimum(8)
@@ -26,7 +52,7 @@ class MainWindow(qtw.QWidget):
         self.my_slider.valueChanged.connect(self.update_slider_label)
 
         # put slider on screen
-        self.layout().addWidget(self.my_slider)
+        self.generator_tab.layout().addWidget(self.my_slider)
 
         # create a horizontal layout for the label and input field
         label_input_layout = qtw.QHBoxLayout()
@@ -45,35 +71,33 @@ class MainWindow(qtw.QWidget):
         label_input_layout.addWidget(self.slider_input)
 
         # add the horizontal layout to the main layout
-        self.layout().addLayout(label_input_layout)
+        self.generator_tab.layout().addLayout(label_input_layout)
 
         # create checkboxes
         self.include_numbers = qtw.QCheckBox("Include Numbers")
         self.include_numbers.setChecked(True)
-        self.layout().addWidget(self.include_numbers)
+        self.generator_tab.layout().addWidget(self.include_numbers)
 
         self.include_special_chars = qtw.QCheckBox("Include Special Characters")
         self.include_special_chars.setChecked(True)
-        self.layout().addWidget(self.include_special_chars)
+        self.generator_tab.layout().addWidget(self.include_special_chars)
 
         # create a button
         my_button = qtw.QPushButton("Generate", clicked=self.press_it)
-        self.layout().addWidget(my_button)
+        self.generator_tab.layout().addWidget(my_button)
 
         # create a QTextEdit to display the generated password
         self.password_display = qtw.QTextEdit()
         self.password_display.setReadOnly(True)
         self.password_display.setFont(qtg.QFont('Helvetica', 20))
-        self.layout().addWidget(self.password_display)
+        self.password_display.setFixedSize(380, 100)  # set the size restrictions
+        self.generator_tab.layout().addWidget(self.password_display)
 
         # create a clipboard icon button
         clipboard_icon = qtg.QIcon.fromTheme("edit-copy")
         self.clipboard_button = qtw.QPushButton("Copy To Clipboard")
         self.clipboard_button.clicked.connect(self.copy_to_clipboard)
-        self.layout().addWidget(self.clipboard_button)
-        
-        # show the app
-        self.show()
+        self.generator_tab.layout().addWidget(self.clipboard_button)
 
     def generate_password(self, length, include_special_chars, include_numbers):
         if length < 4:
