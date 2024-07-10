@@ -137,10 +137,10 @@ class MainWindow(qtw.QWidget):
         options_layout = qtw.QHBoxLayout()
         self.generator_tab.layout().addLayout(options_layout)
 
-        self.include_special_chars = qtw.QCheckBox("Include special characters")
+        self.include_special_chars = qtw.QCheckBox("Special Characters")
         options_layout.addWidget(self.include_special_chars)
 
-        self.include_numbers = qtw.QCheckBox("Include numbers")
+        self.include_numbers = qtw.QCheckBox("Numbers")
         options_layout.addWidget(self.include_numbers)
 
         self.slider_input = qtw.QLineEdit()
