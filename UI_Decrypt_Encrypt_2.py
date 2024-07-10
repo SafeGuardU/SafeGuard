@@ -16,21 +16,32 @@ class LoginDialog(qtw.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Login")
-        self.setFixedSize(300, 150)
-        layout = qtw.QVBoxLayout()
+        self.setFixedSize(400, 625)  # Match the dimensions of MainWindow
+        layout = qtw.QFormLayout()
 
         self.username_input = qtw.QLineEdit()
         self.master_password_input = qtw.QLineEdit()
         self.master_password_input.setEchoMode(qtw.QLineEdit.EchoMode.Password)
         self.login_button = qtw.QPushButton("Login", clicked=self.verify_credentials)
 
-        layout.addWidget(qtw.QLabel("Username:"))
-        layout.addWidget(self.username_input)
-        layout.addWidget(qtw.QLabel("Master Password:"))
-        layout.addWidget(self.master_password_input)
-        layout.addWidget(self.login_button)
+        layout.addRow(qtw.QLabel("Username:"), self.username_input)
+        layout.addRow(qtw.QLabel("Master Password:"), self.master_password_input)
+        layout.addRow(self.login_button)
 
         self.setLayout(layout)
+
+
+    def showEvent(self, event):
+        self.center_on_screen()
+        super().showEvent(event)
+
+    def center_on_screen(self):
+        screen = qtw.QApplication.primaryScreen().availableGeometry()
+        size = self.geometry()
+        self.move(
+            (screen.width() - size.width()) // 2,
+            (screen.height() - size.height()) // 2
+        )
 
     def verify_credentials(self):
         username = self.username_input.text()
@@ -216,11 +227,11 @@ class MainWindow(qtw.QWidget):
         self.cursor.execute('''
         INSERT INTO Passwords (UserID, WebsiteName, StoredUsername, EncryptedPassword, Salt)
         VALUES (?, ?, ?, ?, ?)
-        ''', (user_id, website_name, stored_username, encrypted_password, base64.b64encode(salt).decode()))
+        ''', (user_id, website_name, stored_username, encrypted_password, salt))
         self.conn.commit()
 
-    def generate_salt(self):
-        return os.urandom(16)
+    def generate_encryption_key(self, master_password_hash, salt):
+        return base64.urlsafe_b64encode(master_password_hash + salt)[:32]
 
     def hash_password(self, password, salt):
         kdf = PBKDF2HMAC(
@@ -232,127 +243,86 @@ class MainWindow(qtw.QWidget):
         )
         return kdf.derive(password.encode())
 
-    def generate_encryption_key(self, master_password_hash, salt):
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=100000,
-            backend=default_backend()
-        )
-        return kdf.derive(master_password_hash)
-
-    def encrypt_plaintext_password(self, plaintext_password, encryption_key):
+    def encrypt_password(self, password, encryption_key):
         aesgcm = AESGCM(encryption_key)
-        nonce = os.urandom(12)  # AES-GCM nonce
-        encrypted_password = aesgcm.encrypt(nonce, plaintext_password.encode(), None)
+        nonce = os.urandom(12)
+        encrypted_password = aesgcm.encrypt(nonce, password.encode(), None)
         return base64.b64encode(nonce + encrypted_password).decode()
 
     def decrypt_encrypted_password(self, encrypted_password, encryption_key):
-        encrypted_data = base64.b64decode(encrypted_password)
-        nonce = encrypted_data[:12]
-        ciphertext = encrypted_data[12:]
+        encrypted_password_bytes = base64.b64decode(encrypted_password)
+        nonce = encrypted_password_bytes[:12]
+        ciphertext = encrypted_password_bytes[12:]
         aesgcm = AESGCM(encryption_key)
-        decrypted_password = aesgcm.decrypt(nonce, ciphertext, None)
-        return decrypted_password.decode()
+        return aesgcm.decrypt(nonce, ciphertext, None).decode()
 
-    def generate_password(self, length, include_special_chars, include_numbers):
-        lowercase_letters = string.ascii_lowercase
-        uppercase_letters = string.ascii_uppercase
-        digits = string.digits if include_numbers else ''
-        symbols = string.punctuation if include_special_chars else ''
+    def update_slider_label(self):
+        self.slider_input.setText(str(self.my_slider.value()))
 
-        if not (lowercase_letters or uppercase_letters or digits or symbols):
-            raise ValueError("At least one character set must be enabled.")
-        
-        all_characters = lowercase_letters + uppercase_letters + digits + symbols
-        
-        password = ''
-        if lowercase_letters:
-            password += random.choice(lowercase_letters)
-        if uppercase_letters:
-            password += random.choice(uppercase_letters)
-        if digits:
-            password += random.choice(digits)
-        if symbols:
-            password += random.choice(symbols)
-        
-        password += ''.join(random.choice(all_characters) for _ in range(length - len(password)))
-        
-        password_list = list(password)
-        random.shuffle(password_list)
-        password = ''.join(password_list)
-        
-        return password
+    def update_slider_from_input(self):
+        try:
+            value = int(self.slider_input.text())
+            self.my_slider.setValue(value)
+        except ValueError:
+            pass
 
     def press_it(self):
         length = self.my_slider.value()
         include_special_chars = self.include_special_chars.isChecked()
         include_numbers = self.include_numbers.isChecked()
-        password = self.generate_password(length, include_special_chars, include_numbers)
-        self.password_display.setText(password)
+        generated_password = self.generate_password(length, include_special_chars, include_numbers)
+        self.password_display.setText(generated_password)
 
-    def update_slider_label(self):
-        value = self.my_slider.value()
-        self.slider_input.setText(str(value))
+    def generate_password(self, length, include_special_chars, include_numbers):
+        characters = string.ascii_letters
+        if include_numbers:
+            characters += string.digits
+        if include_special_chars:
+            characters += string.punctuation
 
-    def update_slider_from_input(self):
-        value = self.slider_input.text()
-        if value.isdigit():
-            self.my_slider.setValue(int(value))
+        password = ''.join(random.choice(characters) for _ in range(length))
+        return password
 
     def copy_to_clipboard(self):
         clipboard = qtw.QApplication.clipboard()
         clipboard.setText(self.password_display.toPlainText())
 
-    def get_user_id(self, username):
-        self.cursor.execute('SELECT UserID FROM Users WHERE LOWER(Username) = ?', (username.lower(),))
-        return self.cursor.fetchone()[0]
-
-    def get_master_password_data(self, user_id):
-        self.cursor.execute('SELECT MasterPasswordHash, MasterPasswordSalt FROM Users WHERE UserID = ?', (user_id,))
-        stored_hash, stored_salt = self.cursor.fetchone()
-        return base64.b64decode(stored_hash), base64.b64decode(stored_salt)
-
 class StoreFormDialog(qtw.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Store New Password")
-        self.setFixedSize(300, 300)
-        layout = qtw.QVBoxLayout()
+        layout = qtw.QFormLayout()
 
-        self.website_name_input = qtw.QLineEdit()
+        self.website_input = qtw.QLineEdit()
         self.stored_username_input = qtw.QLineEdit()
-        self.password_input = qtw.QLineEdit()
-        self.password_input.setEchoMode(qtw.QLineEdit.EchoMode.Password)
-        self.save_button = qtw.QPushButton("Save Password", clicked=self.save_password)
+        self.stored_password_input = qtw.QLineEdit()
+        self.stored_password_input.setEchoMode(qtw.QLineEdit.EchoMode.Password)
+        self.store_button = qtw.QPushButton("Store", clicked=self.store_password)
 
-        layout.addWidget(qtw.QLabel("Website Name:"))
-        layout.addWidget(self.website_name_input)
-        layout.addWidget(qtw.QLabel("Stored Username:"))
-        layout.addWidget(self.stored_username_input)
-        layout.addWidget(qtw.QLabel("Password:"))
-        layout.addWidget(self.password_input)
-        layout.addWidget(self.save_button)
+        layout.addRow(qtw.QLabel("Website Name:"), self.website_input)
+        layout.addRow(qtw.QLabel("Stored Username:"), self.stored_username_input)
+        layout.addRow(qtw.QLabel("Stored Password:"), self.stored_password_input)
+        layout.addRow(self.store_button)
 
         self.setLayout(layout)
 
-    def save_password(self):
-        website_name = self.website_name_input.text()
+
+    def store_password(self):
+        website_name = self.website_input.text()
         stored_username = self.stored_username_input.text()
-        plaintext_password = self.password_input.text()
+        stored_password = self.stored_password_input.text()
+        master_password, ok = qtw.QInputDialog.getText(self, "Master Password Required", "Re-enter Master Password:", qtw.QLineEdit.EchoMode.Password)
+        if ok and self.parent().verify_master_password(self.parent().logged_in_user, master_password):
+            user_id = self.parent().get_user_id(self.parent().logged_in_user)
+            salt = os.urandom(16)
+            encryption_key = self.parent().generate_encryption_key(self.parent().hash_password(master_password, salt), salt)
+            encrypted_password = self.parent().encrypt_password(stored_password, encryption_key)
+            self.parent().store_encrypted_password(user_id, website_name, stored_username, encrypted_password, base64.b64encode(salt).decode())
+            self.accept()
+        else:
+            qtw.QMessageBox.critical(self, "Error", "Master password verification failed.")
 
-        user_id = self.parent().get_user_id(self.parent().logged_in_user)
-        stored_hash, stored_salt = self.parent().get_master_password_data(user_id)
-
-        salt = self.parent().generate_salt()
-        encryption_key = self.parent().generate_encryption_key(stored_hash, salt)
-        encrypted_password = self.parent().encrypt_plaintext_password(plaintext_password, encryption_key)
-
-        self.parent().store_encrypted_password(user_id, website_name, stored_username, encrypted_password, salt)
-        qtw.QMessageBox.information(self, "Success", "Password saved successfully.")
-        self.accept()
-
-app = qtw.QApplication([])
-mw = MainWindow()
-app.exec()
+if __name__ == '__main__':
+    app = qtw.QApplication(sys.argv)
+    main_window = MainWindow()
+    sys.exit(app.exec())
