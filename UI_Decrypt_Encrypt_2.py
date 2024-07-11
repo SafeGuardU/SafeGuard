@@ -168,7 +168,15 @@ class MainWindow(qtw.QWidget):
         self.accounts_list.itemClicked.connect(self.prompt_master_password)
 
     def setup_settings_tab(self):
-        pass
+        # create a dropdown for safe timeout
+        self.safe_timeout_label = qtw.QLabel("Safe Timeout:")
+        self.safe_timeout_dropdown = qtw.QComboBox()
+        self.safe_timeout_dropdown.addItems(["5 minutes", "10 minutes", "15 minutes", "Never"])
+
+        # add dropdown to the settings tab
+        self.settings_tab.layout().addWidget(self.safe_timeout_label)
+        self.settings_tab.layout().addWidget(self.safe_timeout_dropdown)
+
 
     def load_accounts(self):
         self.accounts_list.clear()
