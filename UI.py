@@ -2,7 +2,7 @@
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, 
-    QTableWidgetItem, QMessageBox, QDialog, QDialogButtonBox, QFormLayout, QComboBox, QInputDialog
+    QTableWidgetItem, QMessageBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QInputDialog
 )
 from PyQt6.QtCore import Qt
 from db import create_connection, create_tables
@@ -18,6 +18,7 @@ class LoginWindow(QDialog):
         super(LoginWindow, self).__init__(parent)
         self.conn = conn
         self.setWindowTitle("Login")
+        self.setFixedSize(550, 625)
         self.setModal(True)
         
         self.username = QLineEdit(self)
@@ -87,6 +88,7 @@ class PasswordManager(QMainWindow):
         
     def initUI(self):
         self.setWindowTitle("Password Manager")
+        self.setFixedSize(550, 625)
         
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -102,6 +104,7 @@ class PasswordManager(QMainWindow):
         self.layout.addWidget(self.register_button)
         
         self.password_table = QTableWidget(0, 4)
+        self.password_table.setColumnWidth(3, 210)  # Set the width of the 4th column to 250 pixels
         self.password_table.setHorizontalHeaderLabels(["Website", "Username", "Password", "Actions"])
         self.layout.addWidget(self.password_table)
         
@@ -131,9 +134,8 @@ class PasswordManager(QMainWindow):
     def login(self):
         login_dialog = LoginWindow(self.conn, self)
         if login_dialog.exec() == QDialog.DialogCode.Accepted:
-            QMessageBox.information(self, "Login Successful", "You are now logged in.")
-            self.load_passwords()
             self.update_ui_state()
+            self.load_passwords()
         
     def register(self):
         reg_dialog = RegistrationWindow(self.conn, self)
@@ -156,17 +158,22 @@ class PasswordManager(QMainWindow):
         self.password_table.setItem(row_position, 2, QTableWidgetItem("******"))
         
         actions_layout = QWidget()
-        actions_layout_l = QVBoxLayout(actions_layout)
+        actions_layout_l = QHBoxLayout(actions_layout)
+        actions_layout_l.setContentsMargins(1,1,1,1)
+        actions_layout_l.setSpacing(1)
         
         view_button = QPushButton("View")
+        view_button.setFixedSize(60, 25)
         view_button.clicked.connect(lambda: self.view_password(row_position))
         actions_layout_l.addWidget(view_button)
         
         edit_button = QPushButton("Edit")
+        edit_button.setFixedSize(60, 25)
         edit_button.clicked.connect(lambda: self.edit_password(row_position))
         actions_layout_l.addWidget(edit_button)
         
         delete_button = QPushButton("Delete")
+        delete_button.setFixedSize(60, 25)
         delete_button.clicked.connect(lambda: self.delete_password(row_position))
         actions_layout_l.addWidget(delete_button)
         
