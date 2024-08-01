@@ -163,16 +163,19 @@ class PasswordManager(QMainWindow):
         actions_layout_l.setSpacing(1)
         
         view_button = QPushButton("View")
+        view_button.setObjectName("view_button")
         view_button.setFixedSize(60, 25)
         view_button.clicked.connect(lambda: self.view_password(row_position))
         actions_layout_l.addWidget(view_button)
         
         edit_button = QPushButton("Edit")
+        edit_button.setObjectName("edit_button")
         edit_button.setFixedSize(60, 25)
         edit_button.clicked.connect(lambda: self.edit_password(row_position))
         actions_layout_l.addWidget(edit_button)
         
         delete_button = QPushButton("Delete")
+        delete_button.setObjectName("delete_button")
         delete_button.setFixedSize(60, 25)
         delete_button.clicked.connect(lambda: self.delete_password(row_position))
         actions_layout_l.addWidget(delete_button)
@@ -223,6 +226,19 @@ class PasswordManager(QMainWindow):
         delete_password(self.conn, self.user_id, website, username)
         self.password_table.removeRow(row)
         QMessageBox.information(self, "Success", "Password deleted successfully.")
+        
+        for i in range(row, self.password_table.rowCount()):
+            view_button = self.password_table.cellWidget(i, 3).findChild(QPushButton, "view_button")
+            edit_button = self.password_table.cellWidget(i, 3).findChild(QPushButton, "edit_button")
+            delete_button = self.password_table.cellWidget(i, 3).findChild(QPushButton, "delete_button")
+        
+            view_button.clicked.disconnect()
+            edit_button.clicked.disconnect()
+            delete_button.clicked.disconnect()
+        
+            view_button.clicked.connect(lambda _, r=i: self.view_password(r))
+            edit_button.clicked.connect(lambda _, r=i: self.edit_password(r))
+            delete_button.clicked.connect(lambda _, r=i: self.delete_password(r))
     
     def generate_password(self):
         length, ok = QInputDialog.getInt(self, "Generate Password", "Enter the desired password length:")
