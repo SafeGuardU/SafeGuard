@@ -4,7 +4,8 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, 
     QTableWidgetItem, QMessageBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QInputDialog
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QCursor
 from db import create_connection, create_tables
 from registration import create_user
 from login import authenticate_user
@@ -121,6 +122,8 @@ class PasswordManager(QMainWindow):
         self.layout.addWidget(self.logout_button)
         
         self.update_ui_state()
+        
+        self.password_table.itemDoubleClicked.connect(self.copy_to_clipboard)
     
     def update_ui_state(self):
         logged_in = self.user_id is not None
@@ -152,34 +155,46 @@ class PasswordManager(QMainWindow):
     def add_password_row(self, website, username, encrypted_password):
         row_position = self.password_table.rowCount()
         self.password_table.insertRow(row_position)
-        
-        self.password_table.setItem(row_position, 0, QTableWidgetItem(website))
-        self.password_table.setItem(row_position, 1, QTableWidgetItem(username))
-        self.password_table.setItem(row_position, 2, QTableWidgetItem("******"))
-        
+
+        website_item = QTableWidgetItem(website)
+        website_item.setFlags(website_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        website_item.setData(Qt.ItemDataRole.UserRole, website)
+        website_item.setToolTip("Double-click to copy")
+        self.password_table.setItem(row_position, 0, website_item)
+
+        username_item = QTableWidgetItem(username)
+        username_item.setFlags(username_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        username_item.setData(Qt.ItemDataRole.UserRole, username)
+        username_item.setToolTip("Double-click to copy")
+        self.password_table.setItem(row_position, 1, username_item)
+
+        password_item = QTableWidgetItem("******")
+        password_item.setFlags(password_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self.password_table.setItem(row_position, 2, password_item)
+
         actions_layout = QWidget()
         actions_layout_l = QHBoxLayout(actions_layout)
-        actions_layout_l.setContentsMargins(1,1,1,1)
+        actions_layout_l.setContentsMargins(1, 1, 1, 1)
         actions_layout_l.setSpacing(1)
-        
+
         view_button = QPushButton("View")
         view_button.setObjectName("view_button")
         view_button.setFixedSize(60, 25)
         view_button.clicked.connect(lambda: self.view_password(row_position))
         actions_layout_l.addWidget(view_button)
-        
+
         edit_button = QPushButton("Edit")
         edit_button.setObjectName("edit_button")
         edit_button.setFixedSize(60, 25)
         edit_button.clicked.connect(lambda: self.edit_password(row_position))
         actions_layout_l.addWidget(edit_button)
-        
+
         delete_button = QPushButton("Delete")
         delete_button.setObjectName("delete_button")
         delete_button.setFixedSize(60, 25)
         delete_button.clicked.connect(lambda: self.delete_password(row_position))
         actions_layout_l.addWidget(delete_button)
-        
+
         self.password_table.setCellWidget(row_position, 3, actions_layout)
         
     def add_password(self):
@@ -257,6 +272,28 @@ class PasswordManager(QMainWindow):
         self.user_id = None
         self.password_table.setRowCount(0)
         self.update_ui_state()
+        
+    def copy_to_clipboard(self, item):
+        if item.column() in [0, 1]:  # Only copy website and username
+            clipboard = QApplication.clipboard()
+            clipboard.setText(item.data(Qt.ItemDataRole.UserRole))
+        
+            # Display a small dialog box or tooltip to indicate copying
+            tooltip = QLabel(self)
+            tooltip.setWindowFlags(Qt.WindowType.ToolTip)
+            tooltip.setStyleSheet("""
+                QLabel {
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 5px;
+                    border-radius: 3px;
+                }
+            """)
+            tooltip.setText("✔ Copied to clipboard")
+            tooltip.move(QCursor.pos())
+            tooltip.show()
+        
+            QTimer.singleShot(1000, tooltip.hide)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
