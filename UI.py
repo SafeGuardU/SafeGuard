@@ -1,8 +1,9 @@
 # UI.py
 import sys
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, 
-    QTableWidgetItem, QMessageBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QInputDialog
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget,
+    QTableWidgetItem, QMessageBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QInputDialog,
+    QSlider, QComboBox  
 )
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QCursor
@@ -216,12 +217,56 @@ class PasswordManager(QMainWindow):
     def view_password(self, row):
         website = self.password_table.item(row, 0).text()
         username = self.password_table.item(row, 1).text()
-        
+
         decrypted_password = retrieve_password(self.conn, self.user_id, website, username)
         if decrypted_password:
-            QMessageBox.information(self, "Password", f"The password for {username} on {website} is: {decrypted_password}")
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Password")
+            dialog.setFixedSize(400, 150)
+
+            layout = QVBoxLayout(dialog)
+
+            message_label = QLabel(dialog)
+            message_label.setText(f"The password for {username} on {website} is:")
+            layout.addWidget(message_label)
+
+            password_label = QLabel(dialog)
+            password_label.setText(decrypted_password)
+            password_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            password_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+            layout.addWidget(password_label)
+
+            copy_button = QPushButton("Copy to Clipboard", dialog)
+            copy_button.clicked.connect(lambda: self.copy_password(decrypted_password))
+            layout.addWidget(copy_button)
+
+            close_button = QPushButton("Close", dialog)
+            close_button.clicked.connect(dialog.accept)
+            layout.addWidget(close_button)
+
+            dialog.exec()
         else:
             QMessageBox.warning(self, "Error", "No matching credentials found.")
+            
+    def copy_password(self, password):
+        clipboard = QApplication.clipboard()
+        clipboard.setText(password)
+
+        tooltip = QLabel(self)
+        tooltip.setWindowFlags(Qt.WindowType.ToolTip)
+        tooltip.setStyleSheet("""
+            QLabel {
+                background-color: #4CAF50;
+                color: white;
+                padding: 5px;
+                border-radius: 3px;
+            }
+        """)
+        tooltip.setText("✔ Password copied to clipboard")
+        tooltip.move(QCursor.pos())
+        tooltip.show()
+
+        QTimer.singleShot(1000, tooltip.hide)
     
     def edit_password(self, row):
         website = self.password_table.item(row, 0).text()
@@ -256,17 +301,72 @@ class PasswordManager(QMainWindow):
             delete_button.clicked.connect(lambda _, r=i: self.delete_password(r))
     
     def generate_password(self):
-        length, ok = QInputDialog.getInt(self, "Generate Password", "Enter the desired password length:")
-        if not ok:
-            return
-        
-        complexities = ["low", "medium", "high"]
-        complexity, ok = QInputDialog.getItem(self, "Generate Password", "Select the desired password complexity:", complexities, 0, False)
-        if not ok:
-            return
-        
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Generate Password")
+        dialog.setFixedSize(400, 200)
+
+        layout = QVBoxLayout(dialog)
+
+        length_label = QLabel(dialog)
+        length_label.setText("Select the desired password length:")
+        layout.addWidget(length_label)
+
+        length_slider = QSlider(Qt.Orientation.Horizontal, dialog)
+        length_slider.setRange(8, 32)
+        length_slider.setValue(12)
+        length_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        length_slider.setTickInterval(4)
+        layout.addWidget(length_slider)
+
+        length_value_label = QLabel(dialog)
+        length_value_label.setText(str(length_slider.value()))
+        layout.addWidget(length_value_label)
+
+        length_slider.valueChanged.connect(lambda value: length_value_label.setText(str(value)))
+
+        complexity_label = QLabel(dialog)
+        complexity_label.setText("Select the desired password complexity:")
+        layout.addWidget(complexity_label)
+
+        complexity_combo = QComboBox(dialog)
+        complexity_combo.addItems(["Low", "Medium", "High"])
+        complexity_combo.setCurrentIndex(1)  # Set default to "medium"
+        layout.addWidget(complexity_combo)
+
+        generate_button = QPushButton("Generate", dialog)
+        generate_button.clicked.connect(lambda: self.show_generated_password(length_slider.value(), complexity_combo.currentText(), dialog))
+        layout.addWidget(generate_button)
+
+        dialog.exec()
+
+    def show_generated_password(self, length, complexity, parent_dialog):
         generated_password = generate_password(length, complexity)
-        QMessageBox.information(self, "Generated Password", f"Generated Password: {generated_password}")
+
+        dialog = QDialog(parent_dialog)
+        dialog.setWindowTitle("Generated Password")
+        dialog.setFixedSize(400, 150)
+
+        layout = QVBoxLayout(dialog)
+
+        message_label = QLabel(dialog)
+        message_label.setText("The generated password is:")
+        layout.addWidget(message_label)
+
+        password_label = QLabel(dialog)
+        password_label.setText(generated_password)
+        password_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        password_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        layout.addWidget(password_label)
+
+        copy_button = QPushButton("Copy to Clipboard", dialog)
+        copy_button.clicked.connect(lambda: self.copy_password(generated_password))
+        layout.addWidget(copy_button)
+
+        close_button = QPushButton("Close", dialog)
+        close_button.clicked.connect(dialog.accept)
+        layout.addWidget(close_button)
+
+        dialog.exec()
     
     def logout(self):
         self.user_id = None
