@@ -325,7 +325,7 @@ class PasswordManager(QMainWindow):
 
         length_slider.valueChanged.connect(lambda value: length_value_label.setText(str(value)))
 
-                # New checkboxes
+        # New checkboxes
         include_numbers_checkbox = QCheckBox("Include Numbers", dialog)
         include_numbers_checkbox.setChecked(True)  # Default to include numbers
 
@@ -339,46 +339,38 @@ class PasswordManager(QMainWindow):
 
         layout.addLayout(checkbox_layout)
 
+        # Placeholder for the generated password label
+        self.generated_password_label = QLabel(dialog)
+        self.generated_password_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        layout.addWidget(self.generated_password_label)
+
         generate_button = QPushButton("Generate", dialog)
         generate_button.clicked.connect(lambda: self.show_generated_password(
             length_slider.value(),
             include_numbers_checkbox.isChecked(),
             include_special_chars_checkbox.isChecked(),
-            dialog
+            copy_button
         ))
         layout.addWidget(generate_button)
 
-        dialog.exec()
-
-    def show_generated_password(self, length, include_numbers, include_special_chars, parent_dialog):
-        generated_password = generate_password(length, include_numbers, include_special_chars)
- 
-        dialog = QDialog(parent_dialog)
-        dialog.setWindowTitle("Generated Password")
-        dialog.setFixedSize(400, 150)
-
-        layout = QVBoxLayout(dialog)
-
-        message_label = QLabel(dialog)
-        message_label.setText("The generated password is:")
-        layout.addWidget(message_label)
-
-        password_label = QLabel(dialog)
-        password_label.setText(generated_password)
-        password_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        password_label.setStyleSheet("font-size: 14px; font-weight: bold;")
-        layout.addWidget(password_label)
-
+        # Copy to Clipboard button
         copy_button = QPushButton("Copy to Clipboard", dialog)
-        copy_button.clicked.connect(lambda: self.copy_password(generated_password))
+        copy_button.setEnabled(False)  # Initially disabled
+        copy_button.clicked.connect(lambda: self.copy_password(self.generated_password_label.text()))
         layout.addWidget(copy_button)
 
-        close_button = QPushButton("Close", dialog)
-        close_button.clicked.connect(dialog.accept)
-        layout.addWidget(close_button)
-
         dialog.exec()
-    
+
+    def show_generated_password(self, length, include_numbers, include_special_chars, copy_button):
+        generated_password = generate_password(length, include_numbers, include_special_chars)
+        
+        # Update the label with the generated password
+        self.generated_password_label.setText(generated_password)
+
+        # Enable the copy button
+        copy_button.setEnabled(True)
+
+
     def logout(self):
         self.user_id = None
         self.password_table.setRowCount(0)
