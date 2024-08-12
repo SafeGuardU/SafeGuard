@@ -3,7 +3,7 @@ import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget,
     QTableWidgetItem, QMessageBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QInputDialog,
-    QSlider, QComboBox  
+    QSlider, QComboBox , QCheckBox
 )
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QCursor
@@ -20,7 +20,6 @@ class LoginWindow(QDialog):
         super(LoginWindow, self).__init__(parent)
         self.conn = conn
         self.setWindowTitle("Login")
-        self.setFixedSize(550, 625)
         self.setModal(True)
         
         self.username = QLineEdit(self)
@@ -299,17 +298,26 @@ class PasswordManager(QMainWindow):
             view_button.clicked.connect(lambda _, r=i: self.view_password(r))
             edit_button.clicked.connect(lambda _, r=i: self.edit_password(r))
             delete_button.clicked.connect(lambda _, r=i: self.delete_password(r))
-    
+
+
+
     def generate_password(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("Generate Password")
-        dialog.setFixedSize(400, 200)
+        dialog.setFixedSize(400, 300)
 
         layout = QVBoxLayout(dialog)
 
+        # Length Slider and Input
         length_label = QLabel(dialog)
         length_label.setText("Select the desired password length:")
         layout.addWidget(length_label)
+
+        length_input = QLineEdit(dialog)
+        length_input.setText("12")
+        length_input.setFixedSize(20, 20)
+        length_input.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(length_input)
 
         length_slider = QSlider(Qt.Orientation.Horizontal, dialog)
         length_slider.setRange(8, 32)
@@ -318,30 +326,37 @@ class PasswordManager(QMainWindow):
         length_slider.setTickInterval(4)
         layout.addWidget(length_slider)
 
-        length_value_label = QLabel(dialog)
-        length_value_label.setText(str(length_slider.value()))
-        layout.addWidget(length_value_label)
+        length_slider.valueChanged.connect(lambda value: length_input.setText(str(value)))
+        length_input.textChanged.connect(lambda text: length_slider.setValue(int(text) if text.isdigit() and 8 <= int(text) <= 32 else 12))
 
-        length_slider.valueChanged.connect(lambda value: length_value_label.setText(str(value)))
+        # New checkboxes for numbers and special characters
+        include_numbers_checkbox = QCheckBox("Include Numbers", dialog)
+        include_numbers_checkbox.setChecked(True)
 
-        complexity_label = QLabel(dialog)
-        complexity_label.setText("Select the desired password complexity:")
-        layout.addWidget(complexity_label)
+        include_special_chars_checkbox = QCheckBox("Include Special Characters", dialog)
+        include_special_chars_checkbox.setChecked(True)
 
-        complexity_combo = QComboBox(dialog)
-        complexity_combo.addItems(["Low", "Medium", "High"])
-        complexity_combo.setCurrentIndex(1)  # Set default to "medium"
-        layout.addWidget(complexity_combo)
+        # Layout for checkboxes
+        checkbox_layout = QHBoxLayout()
+        checkbox_layout.addWidget(include_numbers_checkbox)
+        checkbox_layout.addWidget(include_special_chars_checkbox)
+        layout.addLayout(checkbox_layout)
 
         generate_button = QPushButton("Generate", dialog)
-        generate_button.clicked.connect(lambda: self.show_generated_password(length_slider.value(), complexity_combo.currentText(), dialog))
+        generate_button.clicked.connect(lambda: self.show_generated_password(
+            length_slider.value(),
+            include_numbers_checkbox.isChecked(),
+            include_special_chars_checkbox.isChecked(),
+            dialog
+        ))
         layout.addWidget(generate_button)
 
         dialog.exec()
 
-    def show_generated_password(self, length, complexity, parent_dialog):
-        generated_password = generate_password(length, complexity)
 
+    def show_generated_password(self, length, include_numbers, include_special_chars, parent_dialog):
+        generated_password = generate_password(length, include_numbers, include_special_chars)
+ 
         dialog = QDialog(parent_dialog)
         dialog.setWindowTitle("Generated Password")
         dialog.setFixedSize(400, 150)
