@@ -1,6 +1,6 @@
 import base64
 from utils import hash_password
-
+# Got to annotate (Lachlan)
 def authenticate_user(conn, username, master_password):
     cursor = conn.cursor()
 
