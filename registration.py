@@ -3,7 +3,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from utils import generate_salt, hash_password
-
+# Got to annotate (Lachlan)
 def create_user(conn, username, master_password):
     cursor = conn.cursor()
 
