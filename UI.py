@@ -20,7 +20,6 @@ class LoginWindow(QDialog):
         super(LoginWindow, self).__init__(parent)
         self.conn = conn
         self.setWindowTitle("Login")
-        self.setFixedSize(550, 625)
         self.setModal(True)
         
         self.username = QLineEdit(self)
