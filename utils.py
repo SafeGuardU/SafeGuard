@@ -22,15 +22,17 @@ def hash_password(password, salt):
     return kdf.derive(password.encode())
 
 def generate_encryption_key(master_password_hash, salt):
-    # Derive a 32-byte encryption key from the master password hash and salt using PBKDF2-HMAC-SHA256
+    #Derive a 32-byte encryption key from the master password hash and salt using PBKDF2-HMAC-SHA256
 
+    #Set up the key derivation function (KDF) using PBKDF2-HMAC-SHA256
     kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend()
+        algorithm=hashes.SHA256(), #Use SHA-256 as the underlying hash function
+        length=32, #Generates a 32-byte key
+        salt=salt, #Use the provided salt value
+        iterations=100000, #Perform 100,000 iterations to make brute-force attacks more difficult for bad actors
+        backend=default_backend() #Use the default cryptographic backend
     )
+    #return the encryption key from the master password hash
     return kdf.derive(master_password_hash)
 
 def encrypt_plaintext_password(plaintext_password, encryption_key):
