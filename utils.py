@@ -13,11 +13,11 @@ def generate_salt():
 def hash_password(password, salt):
     # Use PBKDF2 with SHA256 to derive a 32-byte key from the password and salt
     kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend()
+        algorithm=hashes.SHA256(), #Use SHA-256 as the underlying hash function
+        length=32, #Generates a 32-byte key
+        salt=salt, #Use the provided salt value
+        iterations=100000, #Perform 100,000 iterations to make brute-force attacks more difficult for bad actors
+        backend=default_backend() #Use the default cryptographic backend
     )
     return kdf.derive(password.encode())
 
