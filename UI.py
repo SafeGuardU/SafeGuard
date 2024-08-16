@@ -72,9 +72,12 @@ class RegistrationWindow(QDialog):
         username = self.username.text()
         password = self.password.text()
         
-        create_user(self.conn, username, password)
-        QMessageBox.information(self, "Registration Successful", "User registered successfully")
-        super().accept()
+        registration_result = create_user(self.conn, username, password)
+        if registration_result is True:
+            QMessageBox.information(self, "Registration Successful", "User registered successfully")
+            super().accept()
+        else:
+            QMessageBox.warning(self, "Registration Failed", registration_result)
 
 class PasswordManager(QMainWindow):
     def __init__(self):
