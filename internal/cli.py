@@ -1,10 +1,10 @@
-from db import create_connection, create_tables
-from registration import create_user
-from login import authenticate_user
-from password_storage import store_encrypted_password
-from password_retrieval import retrieve_password
-from password_generator import generate_password
-from password_management import update_password, delete_password
+from internal.db import create_connection, create_tables
+from internal.registration import create_user
+from internal.login import authenticate_user
+from internal.password_storage import store_encrypted_password
+from internal.password_retrieval import retrieve_password
+from internal.password_generator import generate_password
+from internal.password_management import update_password, delete_password
 
 def main():
     conn = create_connection()
