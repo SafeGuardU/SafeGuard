@@ -23,8 +23,8 @@ SafeGuard is a secure and user-friendly password manager built with Python. It p
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/safeguard-password-manager.git
-   cd safeguard-password-manager
+   git clone https://github.com/SafeGuardU/SafeGuard.git
+   cd SafeGuard
    ```
 
 2. Install the required packages:
