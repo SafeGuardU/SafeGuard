@@ -2,7 +2,7 @@ import base64
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
-from utils import generate_salt, hash_password
+from internal.utils import generate_salt, hash_password
 
 #Creates a new user in the database with a unique username and a securely hashed master password
 def create_user(conn, username, master_password):
