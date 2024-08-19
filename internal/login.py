@@ -1,5 +1,5 @@
 import base64
-from utils import hash_password
+from internal.utils import hash_password
 
 def authenticate_user(conn, username, master_password):
     cursor = conn.cursor()
