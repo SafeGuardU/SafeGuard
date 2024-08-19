@@ -1,5 +1,5 @@
 import base64
-from utils import generate_salt, generate_encryption_key, encrypt_plaintext_password
+from internal.utils import generate_salt, generate_encryption_key, encrypt_plaintext_password
 
 def update_password(conn, user_id, website_name, stored_username, new_password):
     cursor = conn.cursor()
