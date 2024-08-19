@@ -1,3 +1,5 @@
+![New Project (1)](https://github.com/user-attachments/assets/2042893c-0ed4-47ad-acb0-1fc51e6aa45c)  
+
 # SafeGuard Password Manager
 
 SafeGuard is a secure and user-friendly password manager built with Python. It provides a robust solution for storing, retrieving, and managing your passwords with strong encryption.
