@@ -8,7 +8,7 @@ SafeGuard is a secure and user-friendly password manager built with Python. It p
 - Master Password Protection
 - Secure SQLite Database
   - Master Password hashing (SHA256)
-  - Stored password encryption (AES256 with Salt)
+  - Stored password encryption (AES256 with Salt/Nonce)
 - Password Storage
 - Password Retrieval
 - Password Generation with Complexity Options
