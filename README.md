@@ -10,6 +10,6 @@ Ensure you have Python installed on your system. If not, or if you need to updat
 Two third-party modules are required to run this program. To install them, open a new Command Prompt or PowerShell window and paste the following command:
 
 ```bash
-pip install cryptography PyQt6
+pip install PyQt6
 pip install cryptography
 ```
