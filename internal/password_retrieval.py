@@ -1,5 +1,5 @@
 import base64
-from utils import generate_encryption_key, decrypt_encrypted_password
+from internal.utils import generate_encryption_key, decrypt_encrypted_password
 
 def retrieve_password(conn, user_id, website_name, stored_username):
     cursor = conn.cursor()
