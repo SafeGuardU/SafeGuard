@@ -1,6 +1,6 @@
 import base64
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from utils import generate_salt, generate_encryption_key, encrypt_plaintext_password
+from internal.utils import generate_salt, generate_encryption_key, encrypt_plaintext_password
 
 def store_encrypted_password(conn, user_id, website_name, stored_username, plaintext_password):
     cursor = conn.cursor()
