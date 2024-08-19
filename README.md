@@ -54,10 +54,6 @@ SafeGuard takes your security seriously:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Disclaimer
 
 While SafeGuard implements strong security measures, no system is 100% secure. Use at your own risk and always maintain backups of your important passwords.
