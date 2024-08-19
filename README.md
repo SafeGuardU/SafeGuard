@@ -11,3 +11,5 @@ Two third-party modules are required to run this program. To install them, open 
 
 ```bash
 pip install cryptography PyQt6
+pip install cryptography
+```
